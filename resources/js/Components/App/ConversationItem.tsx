@@ -2,6 +2,7 @@ import { Link, usePage } from "@inertiajs/react"
 import UserAvatar from "./UserAvatar"
 import GroupAvatar from "./GroupAvatar"
 import UserOptionsDropdown from "./UserOptionsDropdown"
+import { formatMessageDate } from "@/helpers"
 
 
 const ConversationItem = ({ conversation, selectedConversation = null, online = null }: any) => {
@@ -52,7 +53,7 @@ const ConversationItem = ({ conversation, selectedConversation = null, online = 
           {
             conversation.last_message_date && (
               <span className="text-nowrap">
-                {conversation.last_message_date}
+                {formatMessageDate(conversation.last_message_date, false)}
               </span>
             )
           }
@@ -67,9 +68,9 @@ const ConversationItem = ({ conversation, selectedConversation = null, online = 
         }
       </div>
       {
-        currentUser.is_admin && conversation.is_user && (
+        currentUser.is_admin && conversation.is_user ? (
           <UserOptionsDropdown conversation={conversation} />
-        )
+        ) : null
       }
     </Link>
   )

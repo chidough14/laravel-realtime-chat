@@ -6,12 +6,74 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ChatLayout from '@/Layouts/ChatLayout';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/16/solid';
 import { Head } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 function Home({ selectedConversation = null, messages = null }: any) {
   const [localMessages, setLocalMessages] = useState<any>([])
+  const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false)
+  const [scrollFromBottom, setScrollFromBottom] = useState<number>(0)
   const messagesCtrRef = useRef<HTMLDivElement | any>(null)
+  const loadMoreIntersect = useRef<HTMLDivElement | any>(null)
   const { on }: any = useEventBus()
+
+  const loadMoreMessages = useCallback(() => {
+    if (noMoreMessages) {
+      return
+    }
+    // Find first message object
+    const firstMessage = localMessages[0]
+
+    axios.get(route('message.loadOlder', firstMessage.id))
+    .then(({ data }) => {
+      if (data.data.length === 0) {
+        setNoMoreMessages(true)
+        return
+      }
+
+      // Calculate how much is scrolled from bottom and scroll to the same 
+      // position from bottom after messages are loaded
+
+      const scrollHeight = messagesCtrRef.current.scrollHeight
+      const scrollTop = messagesCtrRef.current.scrollTop
+      const clientHeight = messagesCtrRef.current.clientHeight
+
+      const tmpScrollFromBottom = scrollHeight - scrollTop - clientHeight
+
+      console.log("tmpScrollFromBottom", tmpScrollFromBottom)
+      setScrollFromBottom(tmpScrollFromBottom)
+
+      setLocalMessages((prev: any) => {
+        return [...data.data.reverse(), ...prev]
+      })
+    })
+
+    // if (firstMessage) {
+    //   axios.get(route('message.loadOlder', firstMessage.id))
+    //     .then(({ data }) => {
+    //       if (data.data.length === 0) {
+    //         setNoMoreMessages(true)
+    //         return
+    //       }
+
+    //       // Calculate how much is scrolled from bottom and scroll to the same 
+    //       // position from bottom after messages are loaded
+
+    //       const scrollHeight = messagesCtrRef.current.scrollHeight
+    //       const scrollTop = messagesCtrRef.current.scrollTop
+    //       const clientHeight = messagesCtrRef.current.clientHeight
+
+    //       const tmpScrollFromBottom = scrollHeight - scrollTop - clientHeight
+
+    //       console.log("tmpScrollFromBottom", tmpScrollFromBottom)
+    //       setScrollFromBottom(tmpScrollFromBottom)
+
+    //       setLocalMessages((prev: any) => {
+    //         return [...data.data.reverse(), ...prev]
+    //       })
+    //     })
+    // }
+  }, [localMessages, noMoreMessages])
 
   const messageCreated = (message: any) => {
     if (selectedConversation &&
@@ -22,7 +84,7 @@ function Home({ selectedConversation = null, messages = null }: any) {
 
     if (selectedConversation &&
       selectedConversation.is_user &&
-      (selectedConversation.id == message.sender_id || 
+      (selectedConversation.id == message.sender_id ||
         selectedConversation.id == message.receiver_id)) {
       setLocalMessages((prev: any) => [...prev, message])
     }
@@ -37,6 +99,9 @@ function Home({ selectedConversation = null, messages = null }: any) {
 
     const offCreated = on('message.created', messageCreated)
 
+    setScrollFromBottom(0)
+    setNoMoreMessages(false)
+
     return () => {
       offCreated()
     }
@@ -45,6 +110,33 @@ function Home({ selectedConversation = null, messages = null }: any) {
   useEffect(() => {
     setLocalMessages(messages ? messages.data.reverse() : [])
   }, [messages])
+
+  useEffect(() => {
+    if (messagesCtrRef.current && scrollFromBottom !== null) {
+      messagesCtrRef.current.scrollTop = messagesCtrRef.current.scrollHeight - messagesCtrRef.current.offsetHeight - scrollFromBottom
+    }
+
+    if (noMoreMessages) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => entry.isIntersecting && loadMoreMessages()),
+      {
+        rootMargin: "0px 0px 250px 0px"
+      }
+    )
+
+    if (loadMoreIntersect.current) {
+      setTimeout(() => {
+        observer.observe(loadMoreIntersect.current)
+      }, 100)
+    }
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [localMessages])
 
   return (
     <>
@@ -78,6 +170,7 @@ function Home({ selectedConversation = null, messages = null }: any) {
               {
                 localMessages.length > 0 && (
                   <div className='flex flex-1 flex-col'>
+                    <div ref={loadMoreIntersect}></div>
                     {
                       localMessages.map((message: any) => (
                         <MessageItem key={message.id} message={message} />

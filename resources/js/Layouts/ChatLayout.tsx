@@ -1,5 +1,6 @@
 import ConversationItem from "@/Components/App/ConversationItem"
 import TextInput from "@/Components/TextInput"
+import { useEventBus } from "@/EventBus"
 import { PencilSquareIcon } from "@heroicons/react/16/solid"
 import { usePage } from "@inertiajs/react"
 import Echo from "laravel-echo"
@@ -19,6 +20,8 @@ const ChatLayout = ({ children }: any) => {
 
   const isUserOnline = (userId: any): boolean | undefined => onlineUsers[userId]
 
+  const { on }: any = useEventBus()
+
   // console.log(conversations)
   // console.log(selectedConversation)
 
@@ -34,9 +37,38 @@ const ChatLayout = ({ children }: any) => {
     )
   }
 
+  const messageCreated = (message: any) => {
+    setLocalConversations((oldUsers: any) => {
+      return oldUsers.map((u: any) => {
+        // If the message is for user
+        if (message.receiver_id && !u.is_group && 
+          (u.id == message.sender_id || u.id == message.receiver_id)
+        ) {
+          u.last_message = message.message
+          u.last_message_date = message.created_at
+          return u
+        }
+         // If the message is for group
+        if (message.group_id && u.is_group && 
+          (u.id == message.group_id)
+        ) {
+          u.last_message = message.message
+          u.last_message_date = message.created_at
+          return u
+        }
+
+        return u
+      })
+    })
+  }
+
   useEffect(() => {
-    setLocalConversations(conversations)
-  }, [conversations])
+    const offCreated = on('message.created', messageCreated)
+
+    return () => {
+      offCreated()
+    }
+  }, [on])
 
   useEffect(() => {
     setSortedConversations(
@@ -61,6 +93,10 @@ const ChatLayout = ({ children }: any) => {
       })
     )
   }, [localConversations])
+
+  useEffect(() => {
+    setLocalConversations(conversations)
+  }, [conversations])
 
   useEffect(() => {
     window.Echo.join('online')
