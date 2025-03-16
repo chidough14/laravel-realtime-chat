@@ -8,6 +8,13 @@ export interface User {
     is_admin?: boolean
 }
 
+export interface AttachmentPreviewModalProps {
+    attachments: any[]
+    index: number
+    show?: boolean
+    onClose?: () => void
+}
+
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {

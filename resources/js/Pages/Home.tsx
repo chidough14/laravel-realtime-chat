@@ -1,3 +1,4 @@
+import AttachmentPreviewModal from '@/Components/App/AttachmentPreviewModal';
 import ConversationHeader from '@/Components/App/ConversationHeader';
 import MessageInput from '@/Components/App/MessageInput';
 import MessageItem from '@/Components/App/MessageItem';
@@ -13,6 +14,8 @@ function Home({ selectedConversation = null, messages = null }: any) {
   const [localMessages, setLocalMessages] = useState<any>([])
   const [noMoreMessages, setNoMoreMessages] = useState<boolean>(false)
   const [scrollFromBottom, setScrollFromBottom] = useState<number>(0)
+  const [showAttachmentPreview, setShowAttachmentPreview] = useState<boolean>(false)
+  const [previewAttachment, setPreviewAttachment] = useState<any>({})
   const messagesCtrRef = useRef<HTMLDivElement | any>(null)
   const loadMoreIntersect = useRef<HTMLDivElement | any>(null)
   const { on }: any = useEventBus()
@@ -74,6 +77,15 @@ function Home({ selectedConversation = null, messages = null }: any) {
     //     })
     // }
   }, [localMessages, noMoreMessages])
+
+  const onAttachmentClick = (attachments: any, index: number) => {
+    setPreviewAttachment({
+      attachments,
+      index
+    })
+
+    setShowAttachmentPreview(true)
+  }
 
   const messageCreated = (message: any) => {
     if (selectedConversation &&
@@ -173,7 +185,11 @@ function Home({ selectedConversation = null, messages = null }: any) {
                     <div ref={loadMoreIntersect}></div>
                     {
                       localMessages.map((message: any) => (
-                        <MessageItem key={message.id} message={message} />
+                        <MessageItem 
+                          key={message.id} 
+                          message={message} 
+                          attachmentClick={onAttachmentClick}
+                        />
                       ))
                     }
                   </div>
@@ -183,6 +199,17 @@ function Home({ selectedConversation = null, messages = null }: any) {
 
             <MessageInput conversation={selectedConversation} />
           </>
+        )
+      }
+
+      {
+        previewAttachment.attachments && (
+          <AttachmentPreviewModal 
+            attachments={previewAttachment.attachments}  
+            index={previewAttachment.index}
+            show={showAttachmentPreview}
+            onClose={() => setShowAttachmentPreview(false)}
+          />
         )
       }
     </>

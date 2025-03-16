@@ -3,8 +3,9 @@ import { formatMessageDate } from '@/helpers'
 import { usePage } from '@inertiajs/react'
 import UserAvatar from './UserAvatar'
 import ReactMarkdown from 'react-markdown'
+import MessageAttachments from './MessageAttachments'
 
-const MessageItem = ({ message }: any) => {
+const MessageItem = ({ message, attachmentClick }: any) => {
   const currentUser = usePage().props.auth.user
   
   return (
@@ -37,6 +38,11 @@ const MessageItem = ({ message }: any) => {
               {message.message}
             </ReactMarkdown>
           </div>
+
+          <MessageAttachments
+            attachments={message.attachments}
+            attachmentClick={attachmentClick}
+          />
         </div>
       </div>
     </div>
