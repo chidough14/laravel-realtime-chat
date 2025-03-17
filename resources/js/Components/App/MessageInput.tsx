@@ -225,7 +225,7 @@
 //           }
 //         </div>
 //       </div>
- 
+
 //       <div className='order-3 xs:order-3 p-2 flex'>
 //         <Popover className='relative'>
 //           <PopoverButton className='p-1 text-gray-400 hover:text-gray-300'>
@@ -266,6 +266,7 @@ import EmojiPicker from "emoji-picker-react";
 import CustomAudioPlayer from "./CustomAudioPlayer";
 import AttachmentPreview from "./AttachmentPreview";
 import { ChosenFile, MessageInputProps } from "@/types";
+import NewMessageInput from "./NewMessageInput";
 
 const MessageInput: React.FC<MessageInputProps> = ({ conversation = null }) => {
   const [newMessage, setNewMessage] = useState<string>("");
@@ -314,17 +315,17 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversation = null }) => {
         }
       },
     })
-    .then(() => {
-      setNewMessage("");
-      setMessageSending(false);
-      setUploadProgress(0);
-      setChosenFiles([]);
-    })
-    .catch((err) => {
-      setMessageSending(false);
-      setChosenFiles([]);
-      setInputErrorMessage(err?.response?.data?.message || "An error occurred while sending the message");
-    });
+      .then(() => {
+        setNewMessage("");
+        setMessageSending(false);
+        setUploadProgress(0);
+        setChosenFiles([]);
+      })
+      .catch((err) => {
+        setMessageSending(false);
+        setChosenFiles([]);
+        setInputErrorMessage(err?.response?.data?.message || "An error occurred while sending the message");
+      });
   };
 
   const onLikeClick = () => {
@@ -365,12 +366,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversation = null }) => {
       {/* Message Input Field */}
       <div className="order-1 px-3 xs:p-0 min-w-[220px] basis-full xs:basis-0 xs:order-2 flex-1 relative">
         <div className="flex">
-          <input
-            type="text"
+          <NewMessageInput
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="w-full p-2 border rounded"
+            onSend={onSendClick}
+            onChange={(e: any) => setNewMessage(e.target.value)}
           />
           <button className="btn btn-info rounded-l-none" onClick={onSendClick} disabled={messageSending}>
             <PaperAirplaneIcon className="w-6" />
