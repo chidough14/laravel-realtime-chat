@@ -1,40 +1,40 @@
-import { createContext, useContext, useState } from "react";
+// import { createContext, useContext, useState } from "react";
 
-export const EventBusContext = createContext()
+// export const EventBusContext = createContext()
 
-export const EventBusProvider = ({ children }: any) => {
-  const [events, setEvents] = useState<any>({})
+// export const EventBusProvider = ({ children }: any) => {
+//   const [events, setEvents] = useState<any>({})
 
-  const emit = (name: any, data: any) => {
-    if (events[name]) {
-      for (let cb of events[name]) {
-        cb(data)
-      }
-    }
-  }
+//   const emit = (name: any, data: any) => {
+//     if (events[name]) {
+//       for (let cb of events[name]) {
+//         cb(data)
+//       }
+//     }
+//   }
 
-  const on = (name: any, cb: any) => {
-    if (!events[name]) {
-      events[name] = []
-    }
+//   const on = (name: any, cb: any) => {
+//     if (!events[name]) {
+//       events[name] = []
+//     }
 
-    events[name].push(cb)
+//     events[name].push(cb)
 
-    return () => {
-      events[name] = events[name].filter((callback: any) => callback !== cb)
-    }
-  }
+//     return () => {
+//       events[name] = events[name].filter((callback: any) => callback !== cb)
+//     }
+//   }
 
-  return (
-    <EventBusContext.Provider value={{ emit, on }}>
-      {children}
-    </EventBusContext.Provider>
-  )
-}
+//   return (
+//     <EventBusContext.Provider value={{ emit, on }}>
+//       {children}
+//     </EventBusContext.Provider>
+//   )
+// }
 
-export const useEventBus = () => {
-  return useContext(EventBusContext)
-}
+// export const useEventBus = () => {
+//   return useContext(EventBusContext)
+// }
  
 //////==============================================///////////////////////////
 
@@ -107,3 +107,42 @@ export const useEventBus = () => {
 //   }
 //   return context;
 // };
+
+//============================================================================================
+
+import { createContext, useContext, useRef, ReactNode } from "react"
+import { EventBus, EventBusProviderProps, EventCallback } from "./types"
+
+const EventBusContext = createContext<EventBus | null>(null)
+
+export const EventBusProvider: React.FC<EventBusProviderProps> = ({ children }) => {
+  const eventsRef = useRef<Record<string, EventCallback[]>>({}) // Store event handlers in ref
+
+  const emit = (name: string, data: any) => {
+    if (eventsRef.current[name]) {
+      eventsRef.current[name].forEach((cb) => cb(data))
+    }
+  }
+
+  const on = (name: string, cb: EventCallback): (() => void) => {
+    if (!eventsRef.current[name]) {
+      eventsRef.current[name] = []
+    }
+
+    eventsRef.current[name].push(cb)
+
+    return () => {
+      eventsRef.current[name] = eventsRef.current[name].filter((callback) => callback !== cb)
+    }
+  }
+
+  return <EventBusContext.Provider value={{ emit, on }}>{children}</EventBusContext.Provider>
+}
+
+export const useEventBus = (): EventBus => {
+  const context = useContext(EventBusContext)
+  if (!context) {
+    throw new Error("useEventBus must be used within an EventBusProvider")
+  }
+  return context
+}

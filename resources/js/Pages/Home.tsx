@@ -5,6 +5,7 @@ import MessageItem from '@/Components/App/MessageItem';
 import { useEventBus } from '@/EventBus';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ChatLayout from '@/Layouts/ChatLayout';
+import { Message } from '@/types';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/16/solid';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
@@ -18,7 +19,7 @@ function Home({ selectedConversation = null, messages = null }: any) {
   const [previewAttachment, setPreviewAttachment] = useState<any>({})
   const messagesCtrRef = useRef<HTMLDivElement | any>(null)
   const loadMoreIntersect = useRef<HTMLDivElement | any>(null)
-  const { on }: any = useEventBus()
+  const { on } = useEventBus()
 
   const loadMoreMessages = useCallback(() => {
     if (noMoreMessages) {
@@ -87,18 +88,33 @@ function Home({ selectedConversation = null, messages = null }: any) {
     setShowAttachmentPreview(true)
   }
 
-  const messageCreated = (message: any) => {
+  const messageCreated = (message: Message) => {
     if (selectedConversation &&
       selectedConversation.is_group &&
       selectedConversation.id == message.group_id) {
-      setLocalMessages((prev: any) => [...prev, message])
+      setLocalMessages((prev: Message[]) => [...prev, message])
     }
 
     if (selectedConversation &&
       selectedConversation.is_user &&
       (selectedConversation.id == message.sender_id ||
         selectedConversation.id == message.receiver_id)) {
-      setLocalMessages((prev: any) => [...prev, message])
+      setLocalMessages((prev: Message[]) => [...prev, message])
+    }
+  }
+
+  const messageDeleted = ({message}: {message: Message}) => {
+    if (selectedConversation &&
+      selectedConversation.is_group &&
+      selectedConversation.id == message.group_id) {
+      setLocalMessages((prev: Message[]) => prev.filter((msg) => msg.id !== message.id))
+    }
+
+    if (selectedConversation &&
+      selectedConversation.is_user &&
+      (selectedConversation.id == message.sender_id ||
+        selectedConversation.id == message.receiver_id)) {
+        setLocalMessages((prev: Message[]) => prev.filter((msg) => msg.id !== message.id))
     }
   }
 
@@ -109,13 +125,18 @@ function Home({ selectedConversation = null, messages = null }: any) {
       }
     }, 10)
 
+    // const offCreated = () => on('message.created', messageCreated)
+    // const offDeleted = () => on('message.deleted', messageDeleted)
+
     const offCreated = on('message.created', messageCreated)
+    const offDeleted = on('message.deleted', messageDeleted)
 
     setScrollFromBottom(0)
     setNoMoreMessages(false)
 
     return () => {
-      offCreated()
+      offCreated
+      offDeleted
     }
   }, [selectedConversation])
 

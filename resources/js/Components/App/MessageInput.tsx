@@ -389,7 +389,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ conversation = null }) => {
             <div className="relative flex justify-between cursor-pointer" key={file.file.name}>
               {/* Image Preview */}
               {file.file.type.startsWith("image/") && (
-                <img src={file.url} alt="" className="w-16 h-16 object-cover" />
+              <img src={file.url} alt="" className="w-16 h-16 object-cover" />
               )}
 
               {/* Audio Preview */}

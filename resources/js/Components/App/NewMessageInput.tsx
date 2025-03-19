@@ -1,16 +1,17 @@
-import { useEffect, useRef } from 'react'
+import { NewMessageInputProps } from '@/types'
+import React, { useEffect, useRef } from 'react'
 
-const NewMessageInput = ({value, onChange, onSend}: any) => {
-  const input = useRef<any>()
+const NewMessageInput: React.FC<NewMessageInputProps> = ({ value, onChange, onSend }) => {
+  const input = useRef<HTMLTextAreaElement | null>(null)
 
-  const onInputKeydown = (e: any) => {
+  const onInputKeydown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       onSend()
     }
   }
 
-  const onChangeEvent = (e: any) => {
+  const onChangeEvent = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTimeout(() => {
       adjustHeight()
     }, 10)
@@ -20,8 +21,10 @@ const NewMessageInput = ({value, onChange, onSend}: any) => {
 
   const adjustHeight = () => {
     setTimeout(() => {
-      input.current.style.height = "auto"
-      input.current.style.height = input.current.scrollHeight + 1 + "px"
+      if (input.current) {
+        input.current.style.height = "auto"
+        input.current.style.height = input.current.scrollHeight + 1 + "px"
+      }
     }, 100)
   }
 

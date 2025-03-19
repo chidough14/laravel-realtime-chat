@@ -1,6 +1,7 @@
 import ConversationItem from "@/Components/App/ConversationItem"
 import TextInput from "@/Components/TextInput"
 import { useEventBus } from "@/EventBus"
+import { Message } from "@/types"
 import { PencilSquareIcon } from "@heroicons/react/16/solid"
 import { usePage } from "@inertiajs/react"
 import Echo from "laravel-echo"
@@ -20,10 +21,10 @@ const ChatLayout = ({ children }: any) => {
 
   const isUserOnline = (userId: any): boolean | undefined => onlineUsers[userId]
 
-  const { on }: any = useEventBus()
+  const { on } = useEventBus()
 
   // console.log(conversations)
-  // console.log(selectedConversation)
+  // console.log(conversations, sortedConversations)
 
   const onSearch = (e: any) => {
     const search = e.target.value.toLowerCase()
@@ -37,7 +38,7 @@ const ChatLayout = ({ children }: any) => {
     )
   }
 
-  const messageCreated = (message: any) => {
+  const messageCreated = (message: Message) => {
     setLocalConversations((oldUsers: any) => {
       return oldUsers.map((u: any) => {
         // If the message is for user
@@ -62,11 +63,43 @@ const ChatLayout = ({ children }: any) => {
     })
   }
 
+  const messageDeleted = ({prevMessage}: {prevMessage: Message}) => {
+    if (!prevMessage) {
+      return
+    }
+
+    // Find the conversation and update its last_message_id and date
+    setLocalConversations((oldUsers: any) => {
+      return oldUsers.map((u: any) => {
+        if (prevMessage.receiver_id && 
+          !u.is_group && 
+          (u.id == prevMessage.sender_id || u.id == prevMessage.receiver_id)) {
+           u.last_message = prevMessage.message
+           u.last_message_date = prevMessage.created_at
+           return u
+        }
+
+        if (prevMessage.group_id && u.is_group && 
+          (u.id == prevMessage.group_id)
+        ) {
+          u.last_message = prevMessage.message
+          u.last_message_date = prevMessage.created_at
+          return u
+        }
+
+        return u
+      })
+    })
+
+  }
+
   useEffect(() => {
     const offCreated = on('message.created', messageCreated)
+    const offDeleted = on('message.deleted', messageDeleted)
 
     return () => {
-      offCreated()
+      offCreated
+      offDeleted
     }
   }, [on])
 
@@ -160,9 +193,9 @@ const ChatLayout = ({ children }: any) => {
 
               sortedConversations && sortedConversations.map((conversation: any) => (
                 <ConversationItem
-                  key={`${conversation.is_group ? "group_" : "user_"}${conversation.id}`}
+                  key={`${conversation?.is_group ? "group_" : "user_"}${conversation?.id}`}
                   conversation={conversation}
-                  online={!!isUserOnline(conversation.id)}
+                  online={!!isUserOnline(conversation?.id)}
                   selectedConversation={selectedConversation}
                 />
               ))
