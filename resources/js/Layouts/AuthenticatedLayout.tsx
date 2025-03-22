@@ -56,6 +56,17 @@ export default function Authenticated({
               `Shared ${message.attachments.length === 1 ? "an attachment" : message.attachment.length + " attachments"}`
           })
         })
+
+        if (conversation.is_group) {
+          window.Echo.private(`group.deleted.${conversation.id}`)
+          .listen("GroupDeleted", (e: any) => {
+            console.log(e)
+            emit("group.deleted", {id: e.id, name: e.name})
+          })
+          .error((err: any) => {
+            console.log(err)
+          })
+        }
     })
 
     return () => {
@@ -70,6 +81,10 @@ export default function Authenticated({
         }
 
         window.Echo.leave(channel)
+
+        if (conversation.is_group) {
+          window.Echo.leave(`group.deleted.${conversation.id}`)
+        }
       });
     }
   }, [conversations])

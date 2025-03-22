@@ -14,7 +14,7 @@ export interface User {
 }
 
 export interface AttachmentPreviewModalProps {
-    attachments: any[]
+    attachments: Attachment[]
     index: number
     show?: boolean
     onClose?: () => void
@@ -24,11 +24,11 @@ type AudioRecorderProps = {
     fileReady: (file: File, url: string) => void
 }
 
-type Conversation = {
-    id: number;
-    is_user?: boolean;
-    is_group?: boolean;
-};
+// type Conversation = {
+//     id: number;
+//     is_user?: boolean;
+//     is_group?: boolean;
+// };
 
 type ChosenFile = {
     file: File;
@@ -95,6 +95,80 @@ type NewMessageInputProps = {
     onSend: () => void;
 };
 
+// type Conversation = {
+//     id: number;
+//     name: string
+//     description?: string
+//     is_admin: boolean
+//     is_group: boolean
+//     is_user: boolean
+//     owner_id?: number
+//     users?: User[]
+//     user_ids?: number[]
+//     blocked_at: string
+//     created_at: string
+//     last_message: string
+//     last_message_date: string
+//     updated_at: string
+// };
+
+type BaseConversation = {
+    id: number;
+    name: string
+    is_group: boolean
+    is_user: boolean
+    created_at: string
+    last_message: string
+    last_message_date: string
+    updated_at: string
+}
+
+type UserConversation = BaseConversation & {
+    is_admin: boolean
+    blocked_at: string
+}
+
+type GroupConversation = BaseConversation & {
+    description: string
+    owner_id: number
+    users: User[]
+    user_ids: number[]
+}
+
+type Conversation = UserConversation | GroupConversation
+
+type Conversations = Conversation[]
+
+type ConversationItemProps = {
+    conversation: Conversation 
+    selectedConversation: Conversation
+    online: boolean
+}
+
+type GroupModalProps = {
+    show: boolean
+    onClose: () => void
+}
+
+type UserPickerProps = {
+    value: Conversation[]
+    options: Conversation[]
+    onSelect: (persons: Conversation[]) => void
+}
+
+type GroupModalFormData = {
+    id: string
+    name: string
+    description: string
+    user_ids: number[]
+}
+
+type UserAvatarProps = {
+    user: any
+    online?: boolean | null
+    profile?: boolean
+}
+
 
 export type PageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
@@ -103,4 +177,6 @@ export type PageProps<
         user: User;
     };
     ziggy: Config & { location: string };
+    conversations: Conversations
 };
+

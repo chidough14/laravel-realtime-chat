@@ -1,9 +1,10 @@
 import ConversationItem from "@/Components/App/ConversationItem"
+import GroupModal from "@/Components/App/GroupModal"
 import TextInput from "@/Components/TextInput"
 import { useEventBus } from "@/EventBus"
-import { Message } from "@/types"
+import { Conversation, Message } from "@/types"
 import { PencilSquareIcon } from "@heroicons/react/16/solid"
-import { usePage } from "@inertiajs/react"
+import { router, usePage } from "@inertiajs/react"
 import Echo from "laravel-echo"
 import { useEffect, useState } from "react"
 // import AuthenticatedLayout from "./AuthenticatedLayout"
@@ -11,26 +12,27 @@ import { useEffect, useState } from "react"
 
 const ChatLayout = ({ children }: any) => {
   const page = usePage()
-  const conversations: any = page.props.conversations
-  const selectedConversation: any = page.props.selectedConversation
+  const conversations = page.props.conversations
+  const selectedConversation = page.props.selectedConversation as Conversation
 
-  const [localConversations, setLocalConversations] = useState<any>([])
-  const [sortedConversations, setSortedConversations] = useState<any>([])
+  const [localConversations, setLocalConversations] = useState<Conversation[]>([])
+  const [sortedConversations, setSortedConversations] = useState<Conversation[]>([])
 
   const [onlineUsers, setOnlineUsers] = useState<Record<any, any>>({})
+  const [showGroupModal, setShowGroupModal] = useState<boolean>(false)
 
   const isUserOnline = (userId: any): boolean | undefined => onlineUsers[userId]
 
-  const { on } = useEventBus()
+  const { on, emit } = useEventBus()
 
   // console.log(conversations)
   // console.log(conversations, sortedConversations)
 
-  const onSearch = (e: any) => {
-    const search = e.target.value.toLowerCase()
+  const onSearch = (e: React.SyntheticEvent<HTMLInputElement>) => {
+    const search = e.currentTarget.value.toLowerCase()
 
     setLocalConversations(
-      conversations.filter((conversation: any) => {
+      conversations.filter((conversation) => {
         return (
           conversation.name.toLowerCase().includes(search)
         )
@@ -96,10 +98,31 @@ const ChatLayout = ({ children }: any) => {
   useEffect(() => {
     const offCreated = on('message.created', messageCreated)
     const offDeleted = on('message.deleted', messageDeleted)
+    const offModalShow = on('GroupModal.show', (group) => {
+      setShowGroupModal(true)
+    })
+
+    const offGroupDelete = on('group.deleted', ({id, name}) => {
+      setLocalConversations((oldConversations) => {
+        return oldConversations.filter((convo) => convo.id != id)
+      })
+
+      emit('toast.show', `Group "${name}" deleted`)
+
+      if (
+        !selectedConversation ||
+       ( selectedConversation.is_group && 
+        selectedConversation.id == id)
+      ) {
+        router.visit(route('dashboard'))
+      }
+    })
 
     return () => {
       offCreated
       offDeleted
+      offModalShow
+      offGroupDelete
     }
   }, [on])
 
@@ -130,6 +153,7 @@ const ChatLayout = ({ children }: any) => {
   useEffect(() => {
     setLocalConversations(conversations)
   }, [conversations])
+
 
   useEffect(() => {
     window.Echo.join('online')
@@ -174,7 +198,7 @@ const ChatLayout = ({ children }: any) => {
           <div className="flex items-center justify-between py-2 px-3 text-xl font-medium">
             My Conversations
             <div className="tooltip tooltip-left" data-tip="Create new Group">
-              <button className="text-gray-500 hover:text-gray-200">
+              <button className="text-gray-500 hover:text-gray-200" onClick={() => setShowGroupModal(true)}>
                 <PencilSquareIcon className="w-4 h-4 inline-block ml-2" />
               </button>
             </div>
@@ -207,6 +231,11 @@ const ChatLayout = ({ children }: any) => {
           {children}
         </div>
       </div>
+
+      <GroupModal 
+        show={showGroupModal} 
+        onClose={() => setShowGroupModal(false)} 
+      />
     </>
   )
 }

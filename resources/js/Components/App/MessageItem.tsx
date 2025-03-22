@@ -15,7 +15,7 @@ const MessageItem = (
   
   return (
     <div
-      className={
+        className={
         'chat '+ (message.sender_id === currentUser.id ? "chat-end" : "chat-start")
       }
     >

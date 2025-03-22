@@ -3,26 +3,37 @@ import UserAvatar from "./UserAvatar"
 import GroupAvatar from "./GroupAvatar"
 import UserOptionsDropdown from "./UserOptionsDropdown"
 import { formatMessageDate } from "@/helpers"
+import React from "react"
+import { Conversation, ConversationItemProps, GroupConversation, UserConversation } from "@/types"
 
 
-const ConversationItem = ({ conversation, selectedConversation = null, online = null }: any) => {
+const ConversationItem: React.FC<ConversationItemProps> = ({ conversation, selectedConversation = null, online = null }) => {
+  // console.log(conversation)
   const page = usePage()
   const currentUser = page.props.auth.user
   let classes = " border-transparent"
 
+  function isUserConversation (convo: Conversation): convo is UserConversation {
+    return convo.is_user === true
+  }
+
+  function isGroupConversation (convo: Conversation): convo is GroupConversation {
+    return convo.is_group === true
+  }
+
   if (selectedConversation) {
-    if (!selectedConversation.is_group && !conversation.is_group && selectedConversation.id == conversation.id) {
+    if (!isGroupConversation(selectedConversation) && !isGroupConversation(conversation) && selectedConversation.id == conversation.id) {
       classes = "border-blue-500 bg-black/20"
     }
 
-    if (selectedConversation.is_group && conversation.is_group && selectedConversation.id == conversation.id) {
+    if (isGroupConversation(selectedConversation) && isGroupConversation(conversation) && selectedConversation.id == conversation.id) {
       classes = "border-blue-500 bg-black/20"
     }
   }
 
   return (
     <Link
-      href={conversation.is_group ? route('chat.group', conversation) : route('chat.user', conversation)}
+      href={isGroupConversation(conversation) ? route('chat.group', conversation) : route('chat.user', conversation)}
       preserveState
       className={
         "conversation-item flex items-center mb-2 gap-2 text-gray-300 transition-all cursor-pointer border-l-4 hover:bg-black/30 "
@@ -43,7 +54,7 @@ const ConversationItem = ({ conversation, selectedConversation = null, online = 
       <div
         className={
           `flex-1 text-xs max-w-full overflow-hidden `
-          + (conversation.is_user && conversation.blocked_at ? " opacity-50" : "")
+          + (isUserConversation(conversation) && conversation.blocked_at ? " opacity-50" : "")
         }
       >
         <div className="flex gap-1 justify-between items-center">
@@ -68,7 +79,7 @@ const ConversationItem = ({ conversation, selectedConversation = null, online = 
         }
       </div>
       {
-        currentUser.is_admin && conversation.is_user ? (
+        currentUser.is_admin && isUserConversation(conversation) ? (
           <UserOptionsDropdown conversation={conversation} />
         ) : null
       }
