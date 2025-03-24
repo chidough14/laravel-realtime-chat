@@ -1,3 +1,5 @@
+import { useEventBus } from '@/EventBus'
+import { Conversation, UserConversation } from '@/types'
 import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
 import { ShieldCheckIcon, UserIcon } from '@heroicons/react/16/solid'
 import { EllipsisVerticalIcon, LockClosedIcon, LockOpenIcon } from '@heroicons/react/16/solid'
@@ -5,6 +7,23 @@ import axios from 'axios'
 import { Fragment } from 'react'
 
 const UserOptionsDropdown = ({ conversation }: any) => {
+  // function isUserBlocked (convo: Conversation): convo is UserConversation{
+  //   return 'blocked_at' in convo
+  // }
+
+  // function isUserAdmin (convo: Conversation): convo is UserConversation{
+  //   return 'is_admin' in convo
+  // }
+  const { emit } = useEventBus()
+
+  // function isUserBlocked (convo: any) {
+  //   return convo.blocked_at === true
+  // }
+
+  // function isUserAdmin (convo: any) {
+  //   return convo.is_admin === true
+  // }
+
   const changeUserRole = () => {
     if (!conversation.is_user) {
       return
@@ -12,10 +31,11 @@ const UserOptionsDropdown = ({ conversation }: any) => {
 
     axios.post(route('user.changeRole', conversation.id))
       .then((res) => {
+        emit('toast.show', res.data.message)
         console.log(res.data)
       })
       .catch((error) => {
-         console.log(error)
+        console.log(error)
       })
   }
 
@@ -26,10 +46,11 @@ const UserOptionsDropdown = ({ conversation }: any) => {
 
     axios.post(route('user.blockUnblock', conversation.id))
       .then((res) => {
+        emit('toast.show', res.data.message)
         console.log(res.data)
       })
       .catch((error) => {
-         console.log(error)
+        console.log(error)
       })
   }
 
@@ -53,66 +74,55 @@ const UserOptionsDropdown = ({ conversation }: any) => {
         >
           <MenuItems className="absolute right-0 mt-2 w-48 rounded-md bg-gray-800 shadow-lg z-50">
             <div className='px-1 py-1'>
-              <MenuItem>
-                {
-                  ({ focus }) => (
-                    <button
-                      className={
-                        `${focus ? "bg-black/30 text-white" : "text-gray-100"}
-                         group flex w-full items-center rounded-md px-2 py-2 text-sm`
-                      }
-                      onClick={unblockUser}
-                    >
-                      {
-                        conversation.blocked_at && (
-                          <>
-                            <LockOpenIcon className='w-4 h-4 mr-2' /> Unblock User
-                          </>
-                        )
-                      }
 
-                      {
-                        !conversation.blocked_at && (
-                          <>
-                            <LockClosedIcon className='w-4 h-4 mr-2' /> Unblock User
-                          </>
-                        )
-                      }
-                    </button>
+              <button
+                className={
+                  `"bg-black/30 text-white group flex w-full items-center rounded-md px-2 py-2 text-sm`
+                }
+                onClick={unblockUser}
+              >
+                {
+                  conversation.blocked_at && (
+                    <>
+                      <LockOpenIcon className='w-4 h-4 mr-2' /> Unlock User
+                    </>
                   )
                 }
-              </MenuItem>
+
+
+                {
+                  !conversation.blocked_at && (
+                    <>
+                      <LockClosedIcon className='w-4 h-4 mr-2' /> Block User
+                    </>
+                  )
+                }
+              </button>
+
             </div>
 
             <div className='px-1 py-1'>
-              <MenuItem>
+              <button
+                className={
+                  `bg-black/30 text-white group flex w-full items-center rounded-md px-2 py-2 text-sm`
+                }
+                onClick={changeUserRole}
+              >
                 {
-                  ({ focus }) => (
-                    <button
-                      className={
-                        `${focus ? "bg-black/30 text-white" : "text-gray-100"}
-                         group flex w-full items-center rounded-md px-2 py-2 text-sm`
-                      }
-                      onClick={changeUserRole}
-                    >
-                      {
-                        conversation.is_admin && (
-                          <>
-                            <UserIcon className='w-4 h-4 mr-2' /> Make regular user
-                          </>
-                        )
-                      }
-                      {
-                        !conversation.is_admin && (
-                          <>
-                            <ShieldCheckIcon className='w-4 h-4 mr-2' /> Make Admin
-                          </>
-                        )
-                      }
-                    </button>
+                  conversation.is_admin && (
+                    <>
+                      <UserIcon className='w-4 h-4 mr-2' /> Make regular user
+                    </>
                   )
                 }
-              </MenuItem>
+                {
+                  !conversation.is_admin && (
+                    <>
+                      <ShieldCheckIcon className='w-4 h-4 mr-2' /> Make Admin
+                    </>
+                  )
+                }
+              </button>
             </div>
           </MenuItems>
         </Transition>

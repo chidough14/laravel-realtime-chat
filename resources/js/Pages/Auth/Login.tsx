@@ -9,9 +9,11 @@ import { FormEventHandler } from 'react';
 
 export default function Login({
     status,
+    errorMessage,
     canResetPassword,
 }: {
     status?: string;
+    errorMessage?: string;
     canResetPassword: boolean;
 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -35,6 +37,12 @@ export default function Login({
             {status && (
                 <div className="mb-4 text-sm font-medium text-green-600">
                     {status}
+                </div>
+            )}
+
+            {errorMessage && (
+                <div className="mb-4 text-sm font-medium text-red-600">
+                    {errorMessage}
                 </div>
             )}
 

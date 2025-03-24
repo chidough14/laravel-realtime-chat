@@ -1,5 +1,5 @@
 import { useEventBus } from '@/EventBus'
-import { Conversation, GroupModalFormData, GroupModalProps } from '@/types'
+import { Conversation, GroupModalFormData, ModalProps } from '@/types'
 import { useForm, usePage } from '@inertiajs/react'
 import React, { useEffect, useState } from 'react'
 import Modal from '../Modal'
@@ -11,7 +11,7 @@ import InputError from '../InputError'
 import TextAreaInput from '../TextAreaInput'
 import UserPicker from './UserPicker'
 
-const GroupModal: React.FC<GroupModalProps> = ({ show = false, onClose = () => { } }) => {
+const GroupModal: React.FC<ModalProps> = ({ show = false, onClose = () => { } }) => {
   const page = usePage()
   const conversations = page.props.conversations
   const { on, emit } = useEventBus()

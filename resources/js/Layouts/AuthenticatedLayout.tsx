@@ -1,10 +1,13 @@
 import NewMessageNotification from '@/Components/App/NewMessageNotification';
+import NewUserModal from '@/Components/App/NewUserModal';
 import Toast from '@/Components/App/Toast';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
+import PrimaryButton from '@/Components/PrimaryButton';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { useEventBus } from '@/EventBus';
+import { UserPlusIcon } from '@heroicons/react/16/solid';
 import { Link, usePage } from '@inertiajs/react';
 import { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
 
@@ -13,16 +16,16 @@ export default function Authenticated({
   children,
 }: PropsWithChildren<{ header?: ReactNode }>) {
   const page = usePage()
-  const user: any = page.props.auth.user;
-  const conversations = (page.props.conversations || []) as any[]
+  const user = page.props.auth.user;
+  const conversations = (page.props.conversations || [])
 
-  const [showingNavigationDropdown, setShowingNavigationDropdown] =
-    useState(false);
+  const [showingNavigationDropdown, setShowingNavigationDropdown] = useState<boolean>(false);
+  const [showNewUserModal, setShowNewUserModal] = useState<boolean>(false);
 
-  const { emit }: any = useEventBus()
+  const { emit } = useEventBus()
 
   useEffect(() => {
-    conversations.forEach((conversation: any) => {
+    conversations.forEach((conversation) => {
       let channel = `message.group.${conversation.id}`
 
       if (conversation.is_user) {
@@ -30,7 +33,7 @@ export default function Authenticated({
           // parseInt(user.id),
           // parseInt(conversation.id),
           user.id,
-          parseInt(conversation.id),
+          conversation.id,
         ].sort((a, b) => a - b).join('-')}`
       }
 
@@ -70,13 +73,13 @@ export default function Authenticated({
     })
 
     return () => {
-      conversations.forEach((conversation: any) => {
+      conversations.forEach((conversation) => {
         let channel = `message.group.${conversation.id}`
 
         if (conversation.is_user) {
           channel = `message.user.${[
             user.id,
-            parseInt(conversation.id),
+            conversation.id,
           ].sort((a, b) => a - b).join('-')}`
         }
 
@@ -113,7 +116,16 @@ export default function Authenticated({
               </div>
 
               <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                <div className="relative ms-3">
+                <div className="relative ms-3 flex">
+                  {
+                    user.is_admin && (
+                      <PrimaryButton onClick={() => setShowNewUserModal(true)}>
+                        <UserPlusIcon className='h-5 w-5 -ms-1 -me-1' />
+                        Add New User
+                      </PrimaryButton>
+                    )
+                  }
+
                   <Dropdown>
                     <Dropdown.Trigger>
                       <span className="inline-flex rounded-md">
@@ -253,6 +265,7 @@ export default function Authenticated({
       </div>
       <Toast />
       <NewMessageNotification />
+      <NewUserModal show={showNewUserModal} onClose={() => setShowNewUserModal(false)} />
     </>
   );
 }

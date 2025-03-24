@@ -145,7 +145,7 @@ type ConversationItemProps = {
     online: boolean
 }
 
-type GroupModalProps = {
+type ModalProps = {
     show: boolean
     onClose: () => void
 }
@@ -161,6 +161,12 @@ type GroupModalFormData = {
     name: string
     description: string
     user_ids: number[]
+}
+
+type UserModalFormData = {
+    name: string
+    email: string
+    is_admin: boolean
 }
 
 type UpdateProfileFormData = {
