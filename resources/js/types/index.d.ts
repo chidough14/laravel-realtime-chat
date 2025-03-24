@@ -163,6 +163,13 @@ type GroupModalFormData = {
     user_ids: number[]
 }
 
+type UpdateProfileFormData = {
+    name: string
+    avatar: File | null
+    email: string
+    _method: string
+}
+
 type UserAvatarProps = {
     user: any
     online?: boolean | null
